@@ -7,8 +7,12 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { TripsModule } from './trips/trips.module';
 import { SavedTripsModule } from './saved-trips/saved-trips.module';
 
+import { WinstonModule } from 'nest-winston';
+import { winstonConfig } from './config/winston.config';
+
 @Module({
   imports: [
+    WinstonModule.forRoot(winstonConfig),
     ConfigModule.forRoot({
       isGlobal: true,
       load: [configuration]

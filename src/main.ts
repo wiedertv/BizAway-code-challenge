@@ -3,13 +3,14 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
-import { Logger } from '@nestjs/common';
+import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-  const logger = new Logger(bootstrap.name);
-
-  // configure the application
+  const app = await NestFactory.create(AppModule, {
+    bufferLogs: true,
+  });
+  app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
+  const logger = app.get(WINSTON_MODULE_NEST_PROVIDER);
 
   app.enableShutdownHooks();
 
@@ -39,7 +40,6 @@ async function bootstrap() {
 
   if (configService.get('USE_IN_MEMORY_DB')) {
     logger.log('Running with IN-MEMORY Database (MongoDB Memory Server)');
-
   }
 
   logger.log(`Application is running on: http://localhost:${port}`);
