@@ -1,9 +1,9 @@
 export interface TripsApiResponse {
-    origin: string;
-    destination: string;
-    cost: number;
-    duration: number;
-    type: string;
-    id: string;
-    display_name: string;
+  origin: string;
+  destination: string;
+  cost: number;
+  duration: number;
+  type: string;
+  id: string;
+  display_name: string;
 }

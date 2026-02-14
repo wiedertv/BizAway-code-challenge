@@ -5,18 +5,20 @@ import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class TraceMiddleware implements NestMiddleware {
-    private readonly logger = new Logger(TraceMiddleware.name);
+  private readonly logger = new Logger(TraceMiddleware.name);
 
-    constructor(private readonly cls: ClsService) { }
+  constructor(private readonly cls: ClsService) {}
 
-    use(req: Request, res: Response, next: NextFunction) {
-        const traceId = req.headers['x-request-id'] || uuidv4();
-        this.cls.set('traceId', traceId);
-        // Also attach traceId to the response header
-        res.setHeader('x-request-id', traceId as string);
+  use(req: Request, res: Response, next: NextFunction) {
+    const traceId = req.headers['x-request-id'] || uuidv4();
+    this.cls.set('traceId', traceId);
+    // Also attach traceId to the response header
+    res.setHeader('x-request-id', traceId as string);
 
-        this.logger.log(`[${traceId}] Incoming Request: ${req.method} ${req.originalUrl}`);
+    this.logger.log(
+      `[${traceId}] Incoming Request: ${req.method} ${req.originalUrl}`,
+    );
 
-        next();
-    }
+    next();
+  }
 }

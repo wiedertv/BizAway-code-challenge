@@ -4,6 +4,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
+import helmet from 'helmet';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -11,6 +12,33 @@ async function bootstrap() {
   });
   app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
   const logger = app.get(WINSTON_MODULE_NEST_PROVIDER);
+  const configService = app.get(ConfigService);
+
+  // Security: Helmet middleware for secure HTTP headers
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          styleSrc: ["'self'", "'unsafe-inline'"],
+          scriptSrc: ["'self'", "'unsafe-inline'"],
+          imgSrc: ["'self'", 'data:', 'https:'],
+          connectSrc: ["'self'"], // Allow Swagger UI to make API calls
+        },
+      },
+      crossOriginEmbedderPolicy: false, // Needed for Swagger UI
+    }),
+  );
+
+  // CORS configuration
+  const corsOrigins = configService.get<string>('CORS_ORIGINS', '*');
+  app.enableCors({
+    origin: corsOrigins === '*' ? '*' : corsOrigins.split(','),
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-request-id'],
+    credentials: true,
+    maxAge: 3600,
+  });
 
   app.enableShutdownHooks();
 
@@ -33,7 +61,6 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
-  const configService = app.get(ConfigService);
   const port = configService.get<number>('PORT', 3000);
 
   await app.listen(port);
@@ -43,6 +70,8 @@ async function bootstrap() {
   }
 
   logger.log(`Application is running on: http://localhost:${port}`);
-  logger.log(`Swagger documentation is available at: http://localhost:${port}/api`);
+  logger.log(
+    `Swagger documentation is available at: http://localhost:${port}/api`,
+  );
 }
 bootstrap();

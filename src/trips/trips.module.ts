@@ -6,15 +6,15 @@ import { ApiTripRepository } from './infrastructure/repositories/api-trip.reposi
 import { TRIP_REPOSITORY } from './domain/repositories/trip.repository.interface';
 
 @Module({
-    imports: [HttpModule],
-    controllers: [TripsController],
-    providers: [
-        TripsService,
-        ApiTripRepository,
-        {
-            provide: TRIP_REPOSITORY,
-            useClass: ApiTripRepository,
-        },
-    ],
+  imports: [HttpModule],
+  controllers: [TripsController],
+  providers: [
+    TripsService,
+    ApiTripRepository,
+    {
+      provide: TRIP_REPOSITORY,
+      useClass: ApiTripRepository,
+    },
+  ],
 })
-export class TripsModule { }
+export class TripsModule {}
