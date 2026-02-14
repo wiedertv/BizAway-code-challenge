@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+    container_name: trip-planner-api
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - MONGODB_URI=mongodb://mongo:27017/trip-planner
+      - USE_IN_MEMORY_DB=false
+      - TRIPS_API_KEY=${TRIPS_API_KEY}
+      - TRIPS_API_BASE_URL=${TRIPS_API_BASE_URL}
+      - CORS_ORIGINS=*
+      - RATE_LIMIT_TTL=60
+      - RATE_LIMIT_MAX=100
+    depends_on:
+      mongo:
+        condition: service_healthy
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  mongo:
+    image: mongo:7-jammy
+    container_name: trip-planner-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - app-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  mongo-data:
+    driver: local
+
+networks:
+  app-network:
+    driver: bridge
