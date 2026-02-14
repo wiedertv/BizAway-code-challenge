@@ -31,6 +31,6 @@ export class TripsController {
     @Query() searchTripDto: SearchTripDto,
   ): Promise<TripResponseDto[]> {
     const trips = await this.tripsService.search(searchTripDto);
-    return trips.map(TripMapper.toResponse);
+    return trips.map((trip) => TripMapper.toResponse(trip));
   }
 }

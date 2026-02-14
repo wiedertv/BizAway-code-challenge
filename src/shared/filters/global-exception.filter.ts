@@ -19,7 +19,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
-    const traceId = this.cls.get('traceId');
+    const traceId = this.cls.get<string>('traceId');
 
     const status =
       exception instanceof HttpException
@@ -35,23 +35,29 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     const errorDetails = typeof message === 'object' ? message : { message };
 
     // Log unexpected errors
-    if (status === HttpStatus.INTERNAL_SERVER_ERROR) {
+    if (status >= 500) {
       this.logger.error(
-        `[${traceId}] Critical Error: ${exception instanceof Error ? exception.message : exception}`,
+        `[${traceId ?? 'no-trace'}] Critical Error: ${exception instanceof Error ? exception.message : String(exception)}`,
         exception instanceof Error ? exception.stack : '',
       );
     } else {
       this.logger.warn(
-        `[${traceId}] Exception: ${JSON.stringify(errorDetails)}`,
+        `[${traceId ?? 'no-trace'}] Exception: ${JSON.stringify(errorDetails)}`,
       );
     }
 
+    const messageText =
+      typeof message === 'string'
+        ? message
+        : typeof message === 'object' &&
+            message !== null &&
+            'message' in message
+          ? String((message as { message?: unknown }).message)
+          : 'Error occurred';
+
     response.status(status).json({
       statusCode: status,
-      message:
-        typeof message === 'string'
-          ? message
-          : (message as any).message || 'Error occurred',
+      message: messageText,
       error: errorDetails,
       meta: {
         traceId: traceId,

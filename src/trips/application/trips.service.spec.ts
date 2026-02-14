@@ -5,9 +5,16 @@ import { SearchTripDto, SortStrategy } from './dtos/search-trip.dto';
 import { Trip } from '../domain/entities/trip.entity';
 import { TRIP_REPOSITORY } from '../domain/repositories/trip.repository.interface';
 
+type MockRepository = {
+  findAll: jest.Mock<
+    Promise<Trip[]>,
+    [{ origin: string; destination: string }]
+  >;
+};
+
 describe('TripsService', () => {
   let service: TripsService;
-  let tripRepository: any;
+  let tripRepository: MockRepository;
 
   const mockTrips: Trip[] = [
     Trip.create('1', 'SYD', 'GRU', 1000, 10, 'flight', 'Trip 1'),
@@ -21,14 +28,17 @@ describe('TripsService', () => {
         {
           provide: TRIP_REPOSITORY,
           useValue: {
-            findAll: jest.fn(),
+            findAll: jest.fn() as jest.Mock<
+              Promise<Trip[]>,
+              [{ origin: string; destination: string }]
+            >,
           },
         },
       ],
     }).compile();
 
     service = module.get<TripsService>(TripsService);
-    tripRepository = module.get(TRIP_REPOSITORY);
+    tripRepository = module.get<MockRepository>(TRIP_REPOSITORY);
   });
 
   it('should be defined', () => {
@@ -53,8 +63,8 @@ describe('TripsService', () => {
       });
 
       expect(result).toHaveLength(2);
-      expect(result[0].id).toBe('1');
-      expect(result[1].id).toBe('2');
+      expect(result[0]?.id).toBe('1');
+      expect(result[1]?.id).toBe('2');
     });
 
     it('should fetch trips and sort by cheapest', async () => {
@@ -66,8 +76,8 @@ describe('TripsService', () => {
       });
 
       expect(result).toHaveLength(2);
-      expect(result[0].id).toBe('2');
-      expect(result[1].id).toBe('1');
+      expect(result[0]?.id).toBe('2');
+      expect(result[1]?.id).toBe('1');
     });
 
     it('should rethrow UnprocessableEntityException from repository', async () => {

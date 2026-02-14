@@ -35,6 +35,8 @@ export class ExternalApiHealthIndicator extends HealthIndicator {
     }
 
     try {
+      const startTime = Date.now();
+
       const response = await firstValueFrom(
         this.httpService.get(`${baseUrl}/trips`, {
           timeout: 5000,
@@ -43,15 +45,20 @@ export class ExternalApiHealthIndicator extends HealthIndicator {
         }),
       );
 
+      const responseTime = Date.now() - startTime;
       const isHealthy = response.status === 200;
 
       return this.getStatus(key, isHealthy, {
         statusCode: response.status,
-        responseTime: response.headers['x-response-time'] || 'N/A',
+        responseTime: `${responseTime}ms`,
       });
-    } catch (error: any) {
-      const errorMessage = error?.message || 'Unknown error';
-      const statusCode = error?.response?.status;
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
+      const statusCode =
+        error && typeof error === 'object' && 'response' in error
+          ? (error as { response?: { status?: number } }).response?.status
+          : undefined;
 
       return this.getStatus(key, false, {
         error: errorMessage,

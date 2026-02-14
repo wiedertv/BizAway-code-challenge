@@ -43,14 +43,15 @@ describe('TripsController', () => {
 
     it('should return an array of TripResponseDto', async () => {
       mockTripsService.search.mockResolvedValue([mockTrip]);
+      const searchSpy = jest.spyOn(service, 'search');
 
       const result = await controller.search(searchDto);
 
-      expect(service.search).toHaveBeenCalledWith(searchDto);
+      expect(searchSpy).toHaveBeenCalledWith(searchDto);
       expect(result).toHaveLength(1);
       expect(result[0]).toBeInstanceOf(TripResponseDto);
-      expect(result[0].id).toBe(mockTrip.id);
-      expect(result[0].origin).toBe(mockTrip.origin);
+      expect(result[0]?.id).toBe(mockTrip.id);
+      expect(result[0]?.origin).toBe(mockTrip.origin);
     });
   });
 });

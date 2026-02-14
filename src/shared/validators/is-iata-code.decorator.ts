@@ -13,7 +13,7 @@ export function IsIataCode(validationOptions?: ValidationOptions) {
       propertyName: propertyName,
       options: validationOptions,
       validator: {
-        validate(value: any, args: ValidationArguments) {
+        validate(value: unknown) {
           if (typeof value !== 'string') return false;
           return ALLOWED_IATA_CODES.includes(value);
         },

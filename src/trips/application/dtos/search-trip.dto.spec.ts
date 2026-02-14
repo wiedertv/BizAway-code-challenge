@@ -27,10 +27,10 @@ describe('SearchTripDto', () => {
     const dto = new SearchTripDto();
     dto.origin = 'SYD';
     dto.destination = 'JFK';
-    dto.sort_by = 'random' as any;
+    dto.sort_by = 'random' as unknown as SortStrategy;
 
     const errors = await validate(dto);
     expect(errors.length).toBeGreaterThan(0);
-    expect(errors[0].constraints).toHaveProperty('isEnum');
+    expect(errors[0]?.constraints).toHaveProperty('isEnum');
   });
 });
