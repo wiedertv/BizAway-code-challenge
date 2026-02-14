@@ -45,11 +45,20 @@ export class ApiTripRepository implements TripRepository {
           headers: { 'x-api-key': this.apiKey },
         })
         .pipe(
-          map((response) => response.data.map(TripMapper.toDomain)),
-          catchError((e) => {
+          map((response) =>
+            response.data.map((trip) => TripMapper.toDomain(trip)),
+          ),
+          catchError((e: unknown) => {
+            const errorMessage =
+              e instanceof Error ? e.message : 'Unknown error';
+            const errorData =
+              e && typeof e === 'object' && 'response' in e
+                ? (e as { response?: { data?: unknown } }).response?.data
+                : undefined;
+
             this.logger.error(
-              `External API Error: ${e.message}`,
-              e.response?.data,
+              `External API Error: ${errorMessage}`,
+              errorData ? JSON.stringify(errorData) : '',
             );
             throw new UnprocessableEntityException(
               'Failed to fetch trips from external provider',

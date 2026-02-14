@@ -27,9 +27,10 @@ export class HealthController {
   @ApiResponse({ status: 200, description: 'Application is alive' })
   @ApiResponse({ status: 500, description: 'Internal Server Error' })
   @HealthCheck()
-  checkLiveness() {
-    // Simple liveness check - just returns 200 if the app is running
-    return this.health.check([]);
+  async checkLiveness() {
+    const result = await this.health.check([]);
+    const { ...response } = result;
+    return response;
   }
 
   @Get('ready')
@@ -40,12 +41,13 @@ export class HealthController {
   @ApiResponse({ status: 200, description: 'Application is ready' })
   @ApiResponse({ status: 503, description: 'Application is not ready' })
   @HealthCheck()
-  checkReadiness() {
-    // Readiness check - verifies critical dependencies
-    return this.health.check([
+  async checkReadiness() {
+    const result = await this.health.check([
       () => this.db.pingCheck('database'),
-      () => this.memory.checkHeap('memory_heap', 300 * 1024 * 1024), // 300MB
+      () => this.memory.checkHeap('memory_heap', 300 * 1024 * 1024),
     ]);
+    const { ...response } = result;
+    return response;
   }
 
   @Get('detailed')
@@ -58,26 +60,20 @@ export class HealthController {
     description: 'One or more services are unhealthy',
   })
   @HealthCheck()
-  checkDetailed() {
-    return this.health.check([
-      // Database health
+  async checkDetailed() {
+    const result = await this.health.check([
       () => this.db.pingCheck('database'),
-
-      // Memory health (heap should not exceed 300MB)
       () => this.memory.checkHeap('memory_heap', 300 * 1024 * 1024),
-
-      // RSS memory should not exceed 500MB
       () => this.memory.checkRSS('memory_rss', 500 * 1024 * 1024),
-
-      // Disk storage (80% threshold)
       () =>
         this.disk.checkStorage('disk_storage', {
           path: '/',
           thresholdPercent: 0.8,
         }),
 
-      // External API health
       () => this.externalApi.isHealthy('external_trips_api'),
     ]);
+    const { ...response } = result;
+    return response;
   }
 }
