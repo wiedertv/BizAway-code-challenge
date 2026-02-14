@@ -1,0 +1,504 @@
+{
+    "info": {
+        "name": "Tech Challenge - Trip Manager API",
+        "_postman_id": "tech-challenge-trip-manager",
+        "description": "Complete API collection for the Trip Manager with automated tests",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "variable": [
+        {
+            "key": "baseUrl",
+            "value": "http://localhost:3000",
+            "type": "string"
+        },
+        {
+            "key": "sessionId",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "savedTripId",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "search_tripId",
+            "value": "a749c866-7928-4d08-9d5c-a6821a583d1a",
+            "type": "string"
+        },
+        {
+            "key": "search_origin",
+            "value": "SYD",
+            "type": "string"
+        },
+        {
+            "key": "search_destination",
+            "value": "GRU",
+            "type": "string"
+        },
+        {
+            "key": "search_cost",
+            "value": "625",
+            "type": "string"
+        },
+        {
+            "key": "search_duration",
+            "value": "5",
+            "type": "string"
+        },
+        {
+            "key": "search_type",
+            "value": "flight",
+            "type": "string"
+        },
+        {
+            "key": "search_displayName",
+            "value": "from SYD to GRU by flight",
+            "type": "string"
+        }
+    ],
+    "item": [
+        {
+            "name": "Health Checks",
+            "item": [
+                {
+                    "name": "1. Liveness Check",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 200', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response has status field', function () {",
+                                    "    const jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData).to.have.property('status');",
+                                    "    pm.expect(jsonData.status).to.eql('ok');",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/health/live",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "health",
+                                "live"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "2. Readiness Check",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 200', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test('Application is ready', function () {",
+                                    "    const jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData).to.have.property('status');",
+                                    "    pm.expect(jsonData.status).to.eql('ok');",
+                                    "});",
+                                    "",
+                                    "pm.test('Database is up', function () {",
+                                    "    const jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData.info.database.status).to.eql('up');",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/health/ready",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "health",
+                                "ready"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "3. Detailed Health Check",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 200', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response has status and info', function () {",
+                                    "    const jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData).to.have.property('status');",
+                                    "    pm.expect(jsonData).to.have.property('info');",
+                                    "});",
+                                    "",
+                                    "pm.test('Database is up', function () {",
+                                    "    const jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData.info.database.status).to.eql('up');",
+                                    "});",
+                                    "",
+                                    "pm.test('External API is checked', function () {",
+                                    "    const jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData.info).to.have.property('external_trips_api');",
+                                    "    const apiStatus = jsonData.info.external_trips_api.status;",
+                                    "    pm.expect(['up', 'down']).to.include(apiStatus);",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/health/detailed",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "health",
+                                "detailed"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Trip Search",
+            "item": [
+                {
+                    "name": "Search Trips (Cheapest)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 200', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response is standardized', function () {",
+                                    "    const jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData).to.have.property('statusCode');",
+                                    "    pm.expect(jsonData).to.have.property('data');",
+                                    "    pm.expect(jsonData).to.have.property('meta');",
+                                    "});",
+                                    "",
+                                    "pm.test('Returns array of trips', function () {",
+                                    "    const jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData.data).to.be.an('array');",
+                                    "    pm.expect(jsonData.data.length).to.be.above(0);",
+                                    "    ",
+                                    "    // Capture first trip for Save Trip request",
+                                    "    if (jsonData.data && jsonData.data.length > 0) {",
+                                    "        const trip = jsonData.data[0];",
+                                    "        pm.collectionVariables.set('search_tripId', trip.id);",
+                                    "        pm.collectionVariables.set('search_origin', trip.origin);",
+                                    "        pm.collectionVariables.set('search_destination', trip.destination);",
+                                    "        pm.collectionVariables.set('search_cost', trip.cost);",
+                                    "        pm.collectionVariables.set('search_duration', trip.duration);",
+                                    "        pm.collectionVariables.set('search_type', trip.type);",
+                                    "        pm.collectionVariables.set('search_displayName', trip.display_name);",
+                                    "    }",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/trips/search?origin=SYD&destination=GRU&sort_by=cheapest",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "trips",
+                                "search"
+                            ],
+                            "query": [
+                                {
+                                    "key": "origin",
+                                    "value": "SYD"
+                                },
+                                {
+                                    "key": "destination",
+                                    "value": "GRU"
+                                },
+                                {
+                                    "key": "sort_by",
+                                    "value": "cheapest"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "Saved Trips (Trip Manager)",
+            "item": [
+                {
+                    "name": "1. Save Trip (New Session)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 201', function () {",
+                                    "    pm.response.to.have.status(201);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response has trip data', function () {",
+                                    "    const jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData.data).to.have.property('id');",
+                                    "    pm.expect(jsonData.data).to.have.property('sessionId');",
+                                    "    pm.expect(jsonData.data).to.have.property('tripId');",
+                                    "    pm.expect(jsonData.data).to.have.property('origin');",
+                                    "    pm.expect(jsonData.data).to.have.property('destination');",
+                                    "});",
+                                    "",
+                                    "pm.test('SessionId is generated', function () {",
+                                    "    const jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData.data.sessionId).to.be.a('string');",
+                                    "    pm.expect(jsonData.data.sessionId.length).to.be.above(0);",
+                                    "    ",
+                                    "    // Save sessionId and tripId for next requests",
+                                    "    pm.collectionVariables.set('sessionId', jsonData.data.sessionId);",
+                                    "    pm.collectionVariables.set('savedTripId', jsonData.data.id);",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"tripId\": \"{{search_tripId}}\",\n  \"origin\": \"{{search_origin}}\",\n  \"destination\": \"{{search_destination}}\",\n  \"cost\": {{search_cost}},\n  \"duration\": {{search_duration}},\n  \"type\": \"{{search_type}}\",\n  \"displayName\": \"{{search_displayName}}\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/saved-trips",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "saved-trips"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "2. Save Another Trip (Same Session)",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 201', function () {",
+                                    "    pm.response.to.have.status(201);",
+                                    "});",
+                                    "",
+                                    "pm.test('SessionId matches previous', function () {",
+                                    "    const jsonData = pm.response.json();",
+                                    "    const expectedSessionId = pm.collectionVariables.get('sessionId');",
+                                    "    pm.expect(jsonData.data.sessionId).to.eql(expectedSessionId);",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "x-session-id",
+                                "value": "{{sessionId}}"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"tripId\": \"{{search_tripId}}_copy\",\n  \"origin\": \"{{search_origin}}\",\n  \"destination\": \"{{search_destination}}\",\n  \"cost\": {{search_cost}},\n  \"duration\": {{search_duration}},\n  \"type\": \"{{search_type}}\",\n  \"displayName\": \"{{search_displayName}} (Saved Again)\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{baseUrl}}/saved-trips",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "saved-trips"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "3. Get All Saved Trips",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 200', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test('Returns array of saved trips', function () {",
+                                    "    const jsonData = pm.response.json();",
+                                    "    pm.expect(jsonData.data).to.be.an('array');",
+                                    "    pm.expect(jsonData.data.length).to.be.at.least(2);",
+                                    "});",
+                                    "",
+                                    "pm.test('Trips have required fields', function () {",
+                                    "    const jsonData = pm.response.json();",
+                                    "    const trip = jsonData.data[0];",
+                                    "    pm.expect(trip).to.have.property('id');",
+                                    "    pm.expect(trip).to.have.property('sessionId');",
+                                    "    pm.expect(trip).to.have.property('savedAt');",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "x-session-id",
+                                "value": "{{sessionId}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/saved-trips",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "saved-trips"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "4. Delete Saved Trip",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 204', function () {",
+                                    "    pm.response.to.have.status(204);",
+                                    "});",
+                                    "",
+                                    "pm.test('Response body is empty', function () {",
+                                    "    pm.expect(pm.response.text()).to.eql('');",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "x-session-id",
+                                "value": "{{sessionId}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/saved-trips/{{savedTripId}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "saved-trips",
+                                "{{savedTripId}}"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "5. Verify Deletion",
+                    "event": [
+                        {
+                            "listen": "test",
+                            "script": {
+                                "exec": [
+                                    "pm.test('Status code is 200', function () {",
+                                    "    pm.response.to.have.status(200);",
+                                    "});",
+                                    "",
+                                    "pm.test('Deleted trip is not in list', function () {",
+                                    "    const jsonData = pm.response.json();",
+                                    "    const deletedId = pm.collectionVariables.get('savedTripId');",
+                                    "    const found = jsonData.data.find(trip => trip.id === deletedId);",
+                                    "    pm.expect(found).to.be.undefined;",
+                                    "});"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "x-session-id",
+                                "value": "{{sessionId}}"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{baseUrl}}/saved-trips",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "saved-trips"
+                            ]
+                        }
+                    }
+                }
+            ]
+        }
+    ]
+}
