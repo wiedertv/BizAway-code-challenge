@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: .devcontainer/Dockerfile
+    volumes:
+      - ..:/workspace:cached
+    command: sleep infinity
+    environment:
+      - PORT=3000
+      - MONGODB_URI=mongodb://mongo:27017/trip-planner
+      - USE_IN_MEMORY_DB=false
+      - CORS_ORIGINS=*
+      - RATE_LIMIT_TTL=60
+      - RATE_LIMIT_MAX=100
+    networks:
+      - dev-network
+    depends_on:
+      - mongo
+
+  mongo:
+    image: mongo:7-jammy
+    restart: unless-stopped
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - dev-network
+
+volumes:
+  mongo-data:
+
+networks:
+  dev-network:
+    driver: bridge
