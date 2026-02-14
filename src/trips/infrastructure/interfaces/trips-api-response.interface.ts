@@ -1,4 +1,4 @@
-export interface TripsApiItem {
+export interface TripsApiResponse {
     origin: string;
     destination: string;
     cost: number;
