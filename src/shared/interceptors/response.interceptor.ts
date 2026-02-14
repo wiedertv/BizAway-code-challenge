@@ -1,3 +1,4 @@
+import { Request } from 'express';
 import {
   CallHandler,
   ExecutionContext,
@@ -23,16 +24,26 @@ export class ResponseInterceptor<T> implements NestInterceptor<
     context: ExecutionContext,
     next: CallHandler,
   ): Observable<StandardResponse<T>> {
+    const http = context.switchToHttp();
+    const request = http.getRequest<Request>();
+    const path = request.url;
+
+    // Skip interceptor for health check endpoints - they have their own format
+    if (path.startsWith('/health')) {
+      return next.handle() as unknown as Observable<StandardResponse<T>>;
+    }
+
     const now = Date.now();
-    const traceId = this.cls.get('traceId');
+    const traceId = this.cls.get<string>('traceId');
 
     return next.handle().pipe(
-      map((data) => ({
-        statusCode: context.switchToHttp().getResponse().statusCode,
+      map((data: T) => ({
+        statusCode: context.switchToHttp().getResponse<{ statusCode: number }>()
+          .statusCode,
         message: 'Operation successful',
         data: data,
         meta: {
-          traceId: traceId,
+          traceId: traceId ?? 'no-trace',
           timestamp: new Date().toISOString(),
         },
       })),

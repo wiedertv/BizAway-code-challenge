@@ -10,14 +10,19 @@ export class TraceMiddleware implements NestMiddleware {
   constructor(private readonly cls: ClsService) {}
 
   use(req: Request, res: Response, next: NextFunction) {
-    const traceId = req.headers['x-request-id'] || uuidv4();
+    const headerValue = req.headers['x-request-id'];
+    const traceId = Array.isArray(headerValue)
+      ? headerValue[0]
+      : headerValue || uuidv4();
     this.cls.set('traceId', traceId);
     // Also attach traceId to the response header
-    res.setHeader('x-request-id', traceId as string);
+    res.setHeader('x-request-id', traceId);
 
-    this.logger.log(
-      `[${traceId}] Incoming Request: ${req.method} ${req.originalUrl}`,
-    );
+    if (!req.originalUrl.startsWith('/health')) {
+      this.logger.log(
+        `[${traceId}] Incoming Request: ${req.method} ${req.originalUrl}`,
+      );
+    }
 
     next();
   }
