@@ -1,25 +1,10 @@
-import { ApiProperty } from '@nestjs/swagger';
-
 export class Trip {
-    @ApiProperty({ example: 'a749c866-7928-4d08-9d5c-a6821a583d1a' })
     public readonly id: string;
-
-    @ApiProperty({ example: 'SYD' })
     public readonly origin: string;
-
-    @ApiProperty({ example: 'GRU' })
     public readonly destination: string;
-
-    @ApiProperty({ example: 625 })
     public readonly cost: number;
-
-    @ApiProperty({ example: 5 })
     public readonly duration: number;
-
-    @ApiProperty({ example: 'flight' })
     public readonly type: string;
-
-    @ApiProperty({ example: 'from SYD to GRU by flight' })
     public readonly displayName: string;
 
     constructor(
