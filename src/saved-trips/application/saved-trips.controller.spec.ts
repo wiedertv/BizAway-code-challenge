@@ -40,7 +40,6 @@ describe('SavedTripsController', () => {
     }).compile();
 
     controller = module.get<SavedTripsController>(SavedTripsController);
-    service = module.get<SavedTripsService>(SavedTripsService);
   });
 
   afterEach(() => {

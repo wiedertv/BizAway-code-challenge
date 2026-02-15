@@ -92,8 +92,7 @@ describe('HealthController', () => {
 
       const result = await controller.checkReadiness();
       expect(result).toEqual(mockResult);
-      // The array of functions passed to check is hard to test equality for,
-      // but we can check it was called.
+
       expect(
         (healthService as unknown as { check: jest.Mock }).check,
       ).toHaveBeenCalled();

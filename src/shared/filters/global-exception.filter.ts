@@ -31,10 +31,8 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         ? exception.getResponse()
         : 'Internal Server Error';
 
-    // Extract error details if "message" is an object (common with class-validator/NestJS exceptions)
     const errorDetails = typeof message === 'object' ? message : { message };
 
-    // Log unexpected errors
     if (status >= 500) {
       this.logger.error(
         `[${traceId ?? 'no-trace'}] Critical Error: ${exception instanceof Error ? exception.message : String(exception)}`,

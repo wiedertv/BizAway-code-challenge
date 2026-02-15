@@ -40,7 +40,6 @@ describe('TraceMiddleware', () => {
   it('should generate traceId if not present', () => {
     const mockSetHeader = jest.fn();
     mockResponse.setHeader = mockSetHeader;
-    // @ts-expect-error Mocking request
     mockRequest.originalUrl = '/api/test';
 
     middleware.use(mockRequest, mockResponse, mockNext);

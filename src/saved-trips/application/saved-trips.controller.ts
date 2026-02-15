@@ -53,7 +53,6 @@ export class SavedTripsController {
     @Headers('x-session-id') sessionId: string | undefined,
     @Body() dto: SaveTripDto,
   ): Promise<SavedTripResponseDto> {
-    // Generate sessionId if not provided
     const finalSessionId =
       sessionId || this.savedTripsService.generateSessionId();
 
