@@ -105,7 +105,7 @@ src/
 ### Prerequisites
 
 - **Node.js**: v18 or higher
-- **pnpm**: v8 or higher (enforced by package.json)
+- **pnpm**: v9 or higher (enforced by package.json)
 - **MongoDB**: Optional (defaults to in-memory for local dev)
 
 ### Installation Options

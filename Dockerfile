@@ -4,7 +4,7 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 
 # Install pnpm
-RUN npm install -g pnpm
+RUN npm install -g pnpm@9
 
 # Copy dependency files
 COPY package.json pnpm-lock.yaml ./
@@ -27,7 +27,7 @@ WORKDIR /app
 COPY package.json pnpm-lock.yaml ./
 
 # Install pnpm globally
-RUN npm install -g pnpm
+RUN npm install -g pnpm@9
 
 # Install production dependencies only (skip prepare script to avoid husky)
 RUN pnpm install --prod --frozen-lockfile --ignore-scripts
