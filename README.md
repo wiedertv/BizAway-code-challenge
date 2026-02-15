@@ -272,7 +272,7 @@ A comprehensive Postman collection with automated tests is included:
 ```
 
 **Import the collection into Postman and run:**
-1. Health Checks (Liveness, Detailed)
+1. Health Checks (Live, Ready, Detailed)
 2. Trip Search (with validation)
 3. Complete Trip Manager flow:
    - Save trip (new session)
