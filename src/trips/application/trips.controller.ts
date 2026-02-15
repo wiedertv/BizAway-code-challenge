@@ -1,4 +1,5 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Query, UseInterceptors } from '@nestjs/common';
+import { CacheInterceptor } from '@nestjs/cache-manager';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { SearchTripDto } from './dtos/search-trip.dto';
 import { TripsService } from './trips.service';
@@ -12,6 +13,7 @@ export class TripsController {
   constructor(private readonly tripsService: TripsService) {}
 
   @Get('search')
+  @UseInterceptors(CacheInterceptor)
   @ApiOperation({ summary: 'Search for trips from origin to destination' })
   @ApiResponse({
     status: 200,

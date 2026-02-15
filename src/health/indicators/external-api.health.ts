@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
-import { HealthIndicatorResult, HealthIndicatorService } from '@nestjs/terminus';
+import {
+  HealthIndicatorResult,
+  HealthIndicatorService,
+} from '@nestjs/terminus';
 import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
 
@@ -9,9 +12,9 @@ export class ExternalApiHealthIndicator {
   constructor(
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
     private readonly healthIndicatorService: HealthIndicatorService,
-  ) { }
+  ) {}
 
   async isHealthy(key: string): Promise<HealthIndicatorResult> {
     const baseUrl = this.configService.get<string>('TRIPS_API_BASE_URL');

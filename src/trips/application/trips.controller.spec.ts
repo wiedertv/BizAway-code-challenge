@@ -1,9 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { CallHandler, ExecutionContext } from '@nestjs/common';
 import { TripsController } from './trips.controller';
 import { TripsService } from './trips.service';
 import { SearchTripDto, SortStrategy } from './dtos/search-trip.dto';
 import { Trip } from '../domain/entities/trip.entity';
 import { TripResponseDto } from './dtos/trip-response.dto';
+
+import { CacheInterceptor } from '@nestjs/cache-manager';
 
 describe('TripsController', () => {
   let controller: TripsController;
@@ -24,7 +27,13 @@ describe('TripsController', () => {
           useValue: mockTripsService,
         },
       ],
-    }).compile();
+    })
+      .overrideInterceptor(CacheInterceptor)
+      .useValue({
+        intercept: (_context: ExecutionContext, next: CallHandler) =>
+          next.handle(),
+      })
+      .compile();
 
     controller = module.get<TripsController>(TripsController);
     service = module.get<TripsService>(TripsService);

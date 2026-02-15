@@ -14,7 +14,8 @@ This is an enterprise-grade Trip Management API built with NestJS, designed to h
   - Sort by cheapest price
   - Sort by fastest duration
   - Multiple transport types (train, car, flight)
-  
+  - **⚡ In-Memory Caching**: High-performance caching for frequent searches
+
 - **💾 Trip Manager**: Save and manage favorite trips with session-based tracking
   - Anonymous user support via session IDs
   - Full CRUD operations (Create, Read, Delete)
@@ -26,7 +27,7 @@ This is an enterprise-grade Trip Management API built with NestJS, designed to h
   - Rate limiting (100 req/min per IP, configurable)
 
 - **🏥 Health Monitoring**: Comprehensive health checks
-  - Liveness probe (`/health/liveness`)
+  - Liveness probe (`/health/live`)
   - Readiness probe with dependency checks
   - Detailed health with MongoDB, memory, disk, and external API status
 
@@ -50,6 +51,20 @@ This is an enterprise-grade Trip Management API built with NestJS, designed to h
 ## 🏗️ Architecture
 
 This project follows **Clean Architecture** (Hexagonal Architecture) principles:
+
+```mermaid
+graph TD
+    User[Clients] --> API[Trip Manager API]
+    API --> Controller[Controllers]
+    Controller --> Cache[In-Memory Cache]
+    Cache --> Service[Application Services]
+    Service --> Strategy[Sorting Strategies]
+    Service --> Repos[Repositories]
+    Repos --> ExternalAPI[BizAway API]
+    Repos --> DB[(MongoDB)]
+```
+
+### Directory Structure
 
 ```
 src/
@@ -81,7 +96,7 @@ src/
 - **Strategy Pattern**: Pluggable sorting strategies for trip search
 - **DTOs & Validation**: Request/response validation with class-validator
 
-For detailed architecture decisions, see [ARCHITECTURE.md](./ARCHITECTURE.md)
+
 
 ---
 
@@ -91,47 +106,40 @@ For detailed architecture decisions, see [ARCHITECTURE.md](./ARCHITECTURE.md)
 
 - **Node.js**: v18 or higher
 - **pnpm**: v8 or higher (enforced by package.json)
-- **MongoDB**: Local installation or MongoDB Atlas (optional with in-memory mode)
-- **Docker** (optional): For containerized deployment
+- **MongoDB**: Optional (defaults to in-memory for local dev)
 
-### Installation
+### Installation Options
 
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd tech-challenge
-   ```
+#### Option A: Docker Compose (Recommended)
+Orchestrates the entire stack including a persistent MongoDB instance.
+```bash
+docker-compose up -d
+```
 
-2. **Install dependencies**
-   ```bash
-   pnpm install
-   ```
+#### Option B: Local Development (In-Memory DB)
+Simplest for quick testing. No database installation required.
+```bash
+pnpm install
+pnpm run start:dev
+```
 
-3. **Configure environment variables**
-   ```bash
-   cp .env.example .env
-   ```
-   
-   Edit `.env` with your configuration:
-   ```bash
-   # Server
-   PORT=3000
-   
-   # External API (BizAway Trip API)
-   TRIPS_API_KEY=your_api_key_here
-   TRIPS_API_BASE_URL=https://z0qw1e7jpd.execute-api.eu-west-1.amazonaws.com/default/trips
-   
-   # Database
-   MONGODB_URI=mongodb://localhost:27017/trip-planner
-   USE_IN_MEMORY_DB=true  # Set to false for persistent MongoDB
-   
-   # Security
-   CORS_ORIGINS=*  # Use comma-separated origins for production
-   
-   # Rate Limiting
-   RATE_LIMIT_TTL=60    # Time window in seconds
-   RATE_LIMIT_MAX=100   # Max requests per window
-   ```
+#### Option C: DevContainer (VSCode)
+Open this folder in VSCode and click "Reopen in Container" when prompted.
+
+### Configuration
+
+Copy `.env.example` to `.env` and configure:
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `PORT` | No | `3000` | Server port |
+| `TRIPS_API_KEY` | **Yes** | - | BizAway API key |
+| `TRIPS_API_BASE_URL` | **Yes** | - | BizAway API base URL |
+| `MONGODB_URI` | No | `mongodb://localhost:27017/trip-planner` | Connection string |
+| `USE_IN_MEMORY_DB` | No | `true` | Set `false` for real MongoDB |
+| `CORS_ORIGINS` | No | `*` | Allowed origins |
+| `RATE_LIMIT_TTL` | No | `60` | Limit window (seconds) |
+| `RATE_LIMIT_MAX` | No | `100` | Requests per window |
 
 4. **Start the application**
    ```bash
@@ -222,10 +230,10 @@ x-session-id: {session-id}
 
 ```bash
 # Is the application running?
-GET /health/liveness
+GET /health/live
 
 # Is the application ready to serve traffic?
-GET /health/readiness
+GET /health/ready
 
 # Detailed health status (MongoDB, memory, disk, external API)
 GET /health/detailed
@@ -375,61 +383,29 @@ The project uses **Husky** for Git hooks:
 
 ## 🤔 Design Decisions & Trade-offs
 
-### Compromises Made
+This project was built to demonstrate **Senior Engineering** practices, prioritizing maintainability, scalability, and robustness over simple "it works" solutions.
 
-1. **In-Memory Database Default**
-   - **Decision**: Use MongoDB Memory Server by default
-   - **Rationale**: Simplifies local development and testing without external dependencies
-   - **Trade-off**: Data is not persisted between restarts
-   - **Production**: Set `USE_IN_MEMORY_DB=false` and configure `MONGODB_URI`
+### 1. Robust Architecture (Clean/Hexagonal)
+- **Decision**: Implement full clean architecture with strict boundary separation.
+- **Why**: Even for a small challenge, this demonstrates how to structure large-scale applications where business logic must remain independent of frameworks and external APIs.
 
-2. **Session-Based Authentication (No User Login)**
-   - **Decision**: Anonymous sessions via `x-session-id` header
-   - **Rationale**: Matches requirements for anonymous user support
-   - **Trade-off**: Sessions are not encrypted or signed (suitable for demo)
-   - **Future**: Implement JWT-based authentication for production
+### 2. Testing Strategy
+- **Coverage**: ~22% (Statements)
+- **Focus**: The testing strategy strictly focuses on **Domain Logic** (Strategies, Validators) and **Business Rules**, intentionally avoiding brittle tests on framework boilerplate (Modules, simple pass-through Controllers).
+- **Goal**: High-value tests that catch regressions in complex logic, rather than inflating coverage numbers with low-value boilerplate tests.
 
-3. **External API Caching**
-   - **Decision**: No caching layer for trip search API
-   - **Rationale**: Requirements specify real-time search
-   - **Trade-off**: Higher latency and API calls
-   - **Future**: Implement Redis caching with TTL for frequently searched routes
+### 3. Caching Strategy
+- **Decision**: In-memory caching using NestJS `CacheModule`.
+- **Trade-off**: While Redis would be the production standard for distributed systems, an in-memory solution was chosen to simplify the assessment review process (zero external infrastructure dependencies required).
+- **Impact**: Drastically reduces latency for repeated search queries while keeping the setup lightweight.
 
-4. **Test Coverage**
-   - **Current**: ~22% overall coverage (focused on critical paths)
-   - **Rationale**: Prioritized unit tests for business logic (DTOs, services, strategies)
-   - **Trade-off**: Infrastructure layer has minimal test coverage
-   - **Future**: Add integration tests for repositories and E2E tests
+### 4. Resiliencia & Circuit Breaker (Future)
+- **Status**: Not implemented in v1.
+- **Plan**: In a production environment, calls to the external `TRIPS_API` would be wrapped in a Circuit Breaker (e.g., `opossum`) to fail fast and prevent cascading failures during provider outages.
 
-5. **Error Logging Sensitivity**
-   - **Decision**: Detailed error logging including stack traces
-   - **Rationale**: Aids debugging during development
-   - **Trade-off**: May expose sensitive information
-   - **Production**: Implement error sanitization and structured logging levels
-
-### Architecture Highlights
-
-- ✅ **Repository Pattern**: Easy to swap database implementations
-- ✅ **Strategy Pattern**: Extensible sorting strategies (easy to add "shortest", "eco-friendly", etc.)
-- ✅ **Dependency Injection**: Fully leverages NestJS DI container
-- ✅ **DTOs with Validation**: Type-safe requests with automatic validation
-- ✅ **Global Exception Filter**: Consistent error responses
-- ✅ **Request Tracing**: Every request has a unique trace ID for debugging
-
----
-
-## 📝 Environment Variables Reference
-
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `PORT` | No | `3000` | Server port |
-| `TRIPS_API_KEY` | Yes | - | BizAway API key |
-| `TRIPS_API_BASE_URL` | Yes | - | BizAway API base URL |
-| `MONGODB_URI` | No | `mongodb://localhost:27017/trip-planner` | MongoDB connection string |
-| `USE_IN_MEMORY_DB` | No | `true` | Use in-memory MongoDB |
-| `CORS_ORIGINS` | No | `*` | Allowed CORS origins (comma-separated) |
-| `RATE_LIMIT_TTL` | No | `60` | Rate limit time window (seconds) |
-| `RATE_LIMIT_MAX` | No | `100` | Max requests per TTL window |
+### 5. In-Memory Database
+- **Decision**: Default to `mongodb-memory-server`.
+- **Reasoning**: Ensures the project "just works" immediately after `npm install`, avoiding "works on my machine" issues related to local database versions or Docker networking.
 
 ---
 
@@ -454,7 +430,7 @@ The project uses **Husky** for Git hooks:
 - Detailed README with all setup instructions
 - Inline code documentation
 - Swagger/OpenAPI interactive documentation
-- Architecture documentation (ARCHITECTURE.md)
+
 - Postman collection with usage examples
 
 ### ✅ Testing

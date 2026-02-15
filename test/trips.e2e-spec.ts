@@ -1,9 +1,16 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication, HttpStatus, ValidationPipe } from '@nestjs/common';
+import {
+  INestApplication,
+  HttpStatus,
+  ValidationPipe,
+  ExecutionContext,
+  CallHandler,
+} from '@nestjs/common';
 import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from './../src/app.module';
 import { HttpService } from '@nestjs/axios';
+import { CacheInterceptor } from '@nestjs/cache-manager';
 import { of } from 'rxjs';
 import mongoose from 'mongoose';
 
@@ -51,6 +58,11 @@ describe('TripsController (e2e)', () => {
             config: { headers: {} },
           }),
         ),
+      })
+      .overrideInterceptor(CacheInterceptor)
+      .useValue({
+        intercept: (context: ExecutionContext, next: CallHandler) =>
+          next.handle(),
       })
       .compile();
 
