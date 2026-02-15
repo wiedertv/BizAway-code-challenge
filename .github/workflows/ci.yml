@@ -35,6 +35,9 @@ jobs:
   test:
     name: Run Tests
     runs-on: ubuntu-latest
+    env:
+      TRIPS_API_KEY: 'ci-test-key'
+      TRIPS_API_BASE_URL: 'https://api.example.com'
     
     steps:
       - name: Checkout code
