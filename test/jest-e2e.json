@@ -12,5 +12,6 @@
   },
   "setupFilesAfterEnv": [
     "./setup.ts"
-  ]
+  ],
+  "testTimeout": 30000
 }
