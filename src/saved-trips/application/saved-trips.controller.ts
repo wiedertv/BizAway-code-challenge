@@ -8,6 +8,7 @@ import {
   Headers,
   HttpCode,
   HttpStatus,
+  BadRequestException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -88,7 +89,7 @@ export class SavedTripsController {
     @Headers('x-session-id') sessionId: string,
   ): Promise<SavedTripResponseDto[]> {
     if (!sessionId) {
-      throw new Error('Session ID is required');
+      throw new BadRequestException('Session ID is required');
     }
 
     const trips = await this.savedTripsService.findBySessionId(sessionId);
@@ -125,7 +126,7 @@ export class SavedTripsController {
     @Param('id') id: string,
   ): Promise<void> {
     if (!sessionId) {
-      throw new Error('Session ID is required');
+      throw new BadRequestException('Session ID is required');
     }
 
     await this.savedTripsService.deleteTrip(id, sessionId);

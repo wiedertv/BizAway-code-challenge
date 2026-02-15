@@ -20,6 +20,15 @@ describe('AppController (e2e)', () => {
     return request(app.getHttpServer())
       .get('/')
       .expect(200)
-      .expect('Hello World!');
+      .expect((res: request.Response) => {
+        const body = res.body as { data: string };
+        if (body.data !== 'BizAway Hello World') {
+          throw new Error('Response does not match');
+        }
+      });
+  });
+
+  afterAll(async () => {
+    await app.close();
   });
 });

@@ -6,7 +6,7 @@ import {
   IsOptional,
   validateSync,
 } from 'class-validator';
-import { plainToClass } from 'class-transformer';
+import { plainToClass, Transform, Type } from 'class-transformer';
 
 export class EnvironmentVariables {
   @IsInt()
@@ -24,6 +24,12 @@ export class EnvironmentVariables {
 
   @IsBoolean()
   @IsOptional()
+  @Type(() => String)
+  @Transform(({ value }: { value: string }) => {
+    if (value === 'true') return true;
+    if (value === 'false') return false;
+    return value;
+  })
   USE_IN_MEMORY_DB?: boolean = true;
 
   @IsString()
